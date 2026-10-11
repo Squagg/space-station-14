@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using Content.Server._Starlight.StoreDiscount;
 using Content.Server.Store.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Store;
@@ -12,12 +12,12 @@ namespace Content.Server.StoreDiscount.Systems;
 /// <summary>
 /// Discount system that is part of <see cref="StoreSystem"/>.
 /// </summary>
-public sealed class StoreDiscountSystem : EntitySystem
+public sealed partial class StoreDiscountSystem : EntitySystem
 {
     private static readonly ProtoId<StoreCategoryPrototype> DiscountedStoreCategoryPrototypeKey = "DiscountedItems";
 
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -63,6 +63,10 @@ public sealed class StoreDiscountSystem : EntitySystem
         }
 
         var discountComponent = EnsureComp<StoreDiscountComponent>(ev.Store);
+
+        if (discountComponent.Discounts.Count > 0) // Starlight prevents multiple rolls via admin antag, which lead to an servercrash.
+            return;
+
         var discounts = InitializeDiscounts(ev.Listings);
         ApplyDiscounts(ev.Listings, discounts);
         discountComponent.Discounts = discounts;

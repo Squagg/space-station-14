@@ -1,5 +1,4 @@
-﻿using Content.Shared.Starlight.Antags.Abductor;
-using Content.Shared.Starlight.Medical.Surgery;
+﻿using System.Linq;
 using Content.Shared.DoAfter;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -8,13 +7,16 @@ using Content.Shared.Weapons.Melee.Events;
 using Content.Shared.Tag;
 using Content.Shared.Popups;
 using Content.Shared.ActionBlocker;
+using Content.Shared._Starlight.Antags.Abductor.EntitySystems;
+using Content.Shared._Starlight.Antags.Abductor.Components;
+using Content.Shared._Starlight.Medical.Surgery.Components;
 
-namespace Content.Server._Starlight.Antags.Abductor;
+namespace Content.Server._Starlight.Antags.Abductor.EntitySystems;
 
 public sealed partial class AbductorSystem : SharedAbductorSystem
 {
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
 
     private static readonly ProtoId<TagPrototype> _abductor = "Abductor";
     public void InitializeGizmo()
@@ -30,7 +32,7 @@ public sealed partial class AbductorSystem : SharedAbductorSystem
         if (args.HitEntities.Count != 1)
             return;
 
-        var target = args.HitEntities[0];
+        var target = args.HitEntities.First();
 
         if (!HasComp<SurgeryTargetComponent>(target))
             return;

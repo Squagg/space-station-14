@@ -1,9 +1,8 @@
+using Content.Shared._Starlight.Actions.Events;
 using Content.Shared._Starlight.Antags.Vampires.Components;
 using Content.Shared._Starlight.Antags.Vampires.Components.Classes;
 using Content.Shared.Actions.Events;
 using Content.Shared.Actions;
-using Content.Shared.Alert;
-using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
 using Content.Shared.Movement.Pulling.Events;
 using Content.Shared.Movement.Systems;
@@ -17,16 +16,16 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._Starlight.Antags.Vampires.Systems;
 
-public sealed class SharedGargantuaSystem : EntitySystem
+public sealed partial class SharedGargantuaSystem : EntitySystem
 {
     private static readonly EntProtoId BloodSwellStatusEffect = "StatusEffectVampireBloodSwell";
     private static readonly EntProtoId BloodRushStatusEffect = "StatusEffectVampireBloodRush";
 
-    [Dependency] private readonly MovementSpeedModifierSystem _movement = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
-    [Dependency] private readonly SharedVampireActionUseSystem _vampireActions = default!;
+    [Dependency] private MovementSpeedModifierSystem _movement = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private StatusEffectsSystem _statusEffects = default!;
+    [Dependency] private SharedVampireActionUseSystem _vampireActions = default!;
 
     public override void Initialize()
     {
@@ -39,6 +38,7 @@ public sealed class SharedGargantuaSystem : EntitySystem
         SubscribeLocalEvent<GargantuaComponent, PullAttemptEvent>(OnOverwhelmingForcePullAttempt);
         SubscribeLocalEvent<GargantuaComponent, DisarmAttemptEvent>(OnOverwhelmingForceDisarmAttempt);
         SubscribeLocalEvent<GargantuaComponent, AttemptMobTargetCollideEvent>(OnOverwhelmingForceMobPushAttempt);
+        SubscribeLocalEvent<GargantuaComponent, LatchAttemptEvent>(OnOverwhelmingForceLatchAttempt);
         SubscribeLocalEvent<GargantuaComponent, UserBeforePryEvent>(OnOverwhelmingForceBeforePry);
 
         SubscribeLocalEvent<ActiveBloodSwellComponent, GetMeleeDamageEvent>(OnBloodSwellMeleeDamage);
@@ -228,6 +228,18 @@ public sealed class SharedGargantuaSystem : EntitySystem
             return;
 
         args.Cancelled = true;
+    }
+
+    /// <summary>
+    /// Overwhelming Force makes the vampire impossible to latch onto, same as pulls and shoves.
+    /// </summary>
+    private void OnOverwhelmingForceLatchAttempt(EntityUid uid, GargantuaComponent component, ref LatchAttemptEvent args)
+    {
+        if (!component.OverwhelmingForceActive)
+            return;
+
+        args.Cancelled = true;
+        _popup.PopupPredicted(Loc.GetString("vampire-overwhelming-force-latch-blocked"), uid, args.Latcher, PopupType.MediumCaution);
     }
 
     private void OnOverwhelmingForceBeforePry(EntityUid uid, GargantuaComponent component, ref UserBeforePryEvent args)

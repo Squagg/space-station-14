@@ -21,17 +21,17 @@ using Content.Shared.Damage.Components;
 
 namespace Content.Shared.Devour;
 
-public sealed class DevourSystem : EntitySystem
+public sealed partial class DevourSystem : EntitySystem
 {
-    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
-    [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly SharedBloodstreamSystem _bloodstreamSystem = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageSystem = default!; //Starlight
-    [Dependency] private readonly MobThresholdSystem _thresholdSystem = default!; //Starlight
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstreamSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private DamageableSystem _damageSystem = default!; //Starlight
+    [Dependency] private MobThresholdSystem _thresholdSystem = default!; //Starlight
 
     public override void Initialize()
     {
@@ -121,7 +121,7 @@ public sealed class DevourSystem : EntitySystem
 
         //Specific ammount of damage to apply to kill the target
         var deathThreshold = _thresholdSystem.GetThresholdForState(target, MobState.Dead);
-        var targetDamage = _damageSystem.GetDamage((target, damageable));
+        var targetDamage = _damageSystem.GetAllDamage((target, damageable));
         var targetDamageTotal = targetDamage.GetTotal();
         var requiredDamage = deathThreshold - targetDamageTotal;
 
@@ -141,21 +141,21 @@ public sealed class DevourSystem : EntitySystem
         var ichorInjection = new Solution(ent.Comp.Chemical, ent.Comp.HealRate);
 
         // Grant ichor if the devoured thing meets the dragon's food preference
-        if (target != null && _whitelistSystem.IsWhitelistPassOrNull(ent.Comp.FoodPreferenceWhitelist, (EntityUid)target)) //Starlight, args.Args.Target replaced with target
+        if (_whitelistSystem.IsWhitelistPassOrNull(ent.Comp.FoodPreferenceWhitelist, (EntityUid)target)) //Starlight, args.Args.Target replaced with target
         {
             _bloodstreamSystem.TryAddToBloodstream(ent.Owner, ichorInjection);
             ent.Comp.Devoured++; //Starlight devour counter.
         }
 
         // If the devoured thing meets the stomach whitelist criteria, add it to the stomach
-        if (target != null && _whitelistSystem.IsWhitelistPass(ent.Comp.StomachStorageWhitelist, (EntityUid)target)) //Starlight, args.Args.Target replaced with target
+        if (_whitelistSystem.IsWhitelistPass(ent.Comp.StomachStorageWhitelist, (EntityUid)target)) //Starlight, args.Args.Target replaced with target
         {
             _containerSystem.Insert(target, ent.Comp.Stomach); //starlight target.value replaced with target
         }
         //TODO: Figure out a better way of removing structures via devour that still entails standing still and waiting for a DoAfter. Somehow.
         //If it's not alive, it must be a structure.
         // Delete if the thing isn't in the stomach storage whitelist (or the stomach whitelist is null/empty)
-        else if (target != null) //Starlight, args.Args.Target replaced with target
+        else //Starlight, args.Args.Target replaced with target
         {
             PredictedQueueDel(target); //starlight target.value replaced with target
         }

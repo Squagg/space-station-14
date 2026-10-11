@@ -12,14 +12,11 @@ using Content.Shared.Interaction;
 using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Content.Shared.Power;
-using Content.Shared.Projectiles;
 using Content.Shared.Singularity.Components;
-using Content.Shared.Temperature.Components;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Events;
 using Robust.Shared.Random;
 using Content.Server.Bible.Components;
 
@@ -45,13 +42,13 @@ public sealed partial class CosmicRiftSystem : EntitySystem
     {
         base.Initialize();
         SubscribeLocalEvent<CosmicMalignRiftComponent, InteractHandEvent>(OnInteract);
-
-        SubscribeLocalEvent<CosmicMalignRiftComponent, EventPurgeRiftDoAfter>(OnPurgeDoAfter);
         SubscribeLocalEvent<CosmicCultComponent, EventAbsorbRiftDoAfter>(OnAbsorbDoAfter);
 
         SubscribeLocalEvent<CosmicLambdaParticleSourceComponent, ActivateInWorldEvent>(OnActivated);
         SubscribeLocalEvent<CosmicLambdaParticleSourceComponent, PowerChangedEvent>(OnPowerChanged);
-        SubscribeLocalEvent<CosmicMalignRiftComponent, InteractUsingEvent>(OnInteractUsing);
+
+        SubscribeLocalEvent<CosmicRiftPurgeComponent, InteractUsingEvent>(OnInteractUsing);
+        SubscribeLocalEvent<CosmicRiftPurgeComponent, EventPurgeRiftDoAfter>(OnPurgeDoAfter);
     }
 
     private void OnActivated(Entity<CosmicLambdaParticleSourceComponent> ent, ref ActivateInWorldEvent args)
@@ -165,7 +162,7 @@ public sealed partial class CosmicRiftSystem : EntitySystem
         ent.Comp.DoAfterId = doAfterId;
     }
 
-    private void OnInteractUsing(Entity<CosmicMalignRiftComponent> ent, ref InteractUsingEvent args)
+    private void OnInteractUsing(Entity<CosmicRiftPurgeComponent> ent, ref InteractUsingEvent args)
     {
         if (args.Handled)
             return;
@@ -239,7 +236,7 @@ public sealed partial class CosmicRiftSystem : EntitySystem
         QueueDel(target);
     }
 
-    private void OnPurgeDoAfter(Entity<CosmicMalignRiftComponent> ent, ref EventPurgeRiftDoAfter args)
+    private void OnPurgeDoAfter(Entity<CosmicRiftPurgeComponent> ent, ref EventPurgeRiftDoAfter args)
     {
         if (args.Cancelled || args.Handled)
             return;

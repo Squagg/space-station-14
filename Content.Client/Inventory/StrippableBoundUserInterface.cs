@@ -8,7 +8,6 @@ using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.Hands.Controls;
 using Content.Client.Verbs.UI;
 using Content.Shared.Cuffs;
-using Content.Shared.Cuffs.Components;
 using Content.Shared.Ensnaring.Components;
 using Content.Shared.Hands.Components;
 using Content.Shared.IdentityManagement;
@@ -22,17 +21,16 @@ using Robust.Client.Player;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
-using Robust.Shared.Map;
 using static Content.Client.Inventory.ClientInventorySystem;
 using static Robust.Client.UserInterface.Control;
 
 namespace Content.Client.Inventory
 {
     [UsedImplicitly]
-    public sealed class StrippableBoundUserInterface : BoundUserInterface
+    public sealed partial class StrippableBoundUserInterface : BoundUserInterface
     {
-        [Dependency] private readonly IPlayerManager _player = default!;
-        [Dependency] private readonly IUserInterfaceManager _ui = default!;
+        [Dependency] private IPlayerManager _player = default!;
+        [Dependency] private IUserInterfaceManager _ui = default!;
 
         private readonly ExamineSystem _examine;
         private readonly HandsSystem _hands;
@@ -222,6 +220,9 @@ namespace Content.Client.Inventory
 
         private void SlotPressed(GUIBoundKeyEventArgs ev, SlotControl slot)
         {
+            if (TryReplaySlotPressed(ev, slot)) // Starlight
+                return; // Starlight
+
             // TODO: allow other interactions? Verbs? But they should then generate a pop-up and/or have a delay so the
             // user that is being stripped can prevent the verbs from being exectuted.
             // So for now: only stripping & examining

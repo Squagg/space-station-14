@@ -29,7 +29,7 @@
   - type: ItemSlots
     slots:
       gun_magazine:
-        name: Magazine
+        name: item-slot-component-slot-name-magazine
         startingItem: MagazineShotgun
         priority: 2
         whitelist:
@@ -51,42 +51,6 @@
   - type: Appearance
 
 - type: entity
-  name: sawn-off riot shotgun
-  parent: [BaseWeaponShotgun, BaseSecurityContraband]
-  id: WeaponShotgunRiotSawn
-  description: Come with me if you want to live.
-  components:
-  - type: Sprite
-    sprite: _Starlight/Objects/Weapons/Guns/Shotguns/riot_sawn.rsi
-  - type: Clothing
-    sprite: _Starlight/Objects/Weapons/Guns/Shotguns/riot_sawn.rsi
-  - type: Item
-    size: Small
-    sprite: _Starlight/Objects/Weapons/Guns/Shotguns/riot_sawn_inhands_64x.rsi
-  - type: Gun
-    spread: 30
-    pump: true
-  - type: BallisticAmmoProvider
-    capacity: 4
-# - type: Construction
-#   graph: ShotgunRiotSawn
-#   node: shotgunsawn
-#   deconstructionTarget: null
-
-- type: entity
-  parent: [WeaponShotgunRiotSawn, BaseSecurityContraband]
-  id: WeaponShotgunRiotSawnEmpty
-  suffix: Empty
-  components:
-  - type: BallisticAmmoProvider
-    proto: null
-# - type: Construction
-#   graph: ShotgunRiotSawn
-#   node: shotgunsawn
-#   deconstructionTarget: null
-
-
-- type: entity
   name: combat shotgun
   parent: [BaseWeaponShotgun, BaseGunWieldable, BaseSecurityContraband]
   id: WeaponShotgunCombat
@@ -96,6 +60,8 @@
     sprite: _Starlight/Objects/Weapons/Guns/Shotguns/cshotgun_inhands_64x.rsi
   - type: Gun
     spread: 20
+    soundGunshot:
+      path: /Audio/_Starlight/Weapons/Guns/Gunshots/gun_shotgun_automatic.ogg
   - type: Sprite
     sprite: _Starlight/Objects/Weapons/Guns/Shotguns/cshotgun.rsi
   - type: Clothing
@@ -103,6 +69,8 @@
   - type: GunRequiresWield
   - type: BallisticAmmoProvider
     capacity: 7
+    soundRack:
+      collection: CockPumpAction
 
 - type: entity
   name: cycler shotgun
@@ -277,7 +245,7 @@
   - type: ItemSlots
     slots:
       gun_magazine:
-        name: Magazine
+        name: item-slot-component-slot-name-magazine
         startingItem: MagazineShotgun
         priority: 2
         whitelist:
@@ -317,14 +285,13 @@
     sprite: _Starlight/Objects/Weapons/Guns/Shotguns/forged_shotgun.rsi
   - type: Clothing
     sprite: _Starlight/Objects/Weapons/Guns/Shotguns/forged_shotgun.rsi
-  - type: GunRequiresWield
   - type: BallisticAmmoProvider
     capacity: 2
     proto: null
 
 - type: entity
   name: makeshift shotgun
-  parent: [WeaponFlareGunSecurity, BaseMinorContraband]
+  parent: [WeaponFlareGun, BaseMinorContraband]
   id: WeaponShotgunMakeshift
   description: A small hand-cannon that fires 12 gauge shotgun shells. Has no cloth to hold it together, so it has a high chance of falling apart with every shot.
   components:
@@ -339,6 +306,17 @@
   - type: Construction
     graph: MakeshiftShotgunGraph
     node: shotgun
+  - type: ItemSlots
+    slots:
+      gun_chamber:
+        name: item-slot-component-slot-name-chamber
+        priority: 1
+        whitelist:
+          tags:
+            - ShellShotgun
+  - type: Tag
+    tags:
+    - Sidearm
   - type: WeaponDismantleOnShoot
     dismantleChance: 0.50
     selfDamage:
@@ -367,6 +345,11 @@
     supportedPins: [ Makeshift, GunUpgrade ]
 
 # it's the TOZ!
+  - type: Gun
+    minAngle: 10
+    maxAngle: 24
+    angleIncrease: 5
+    angleDecay: 10
 - type: entity
   name: ZOZ-106
   parent: [BaseWeaponShotgunAny, BaseGunWieldable, BaseSovietContraband]
@@ -403,6 +386,8 @@
     proto: ShellShotgunToz
     soundInsert:
       path: /Audio/Weapons/Guns/MagIn/shotgun_insert.ogg
+    soundRack:
+      path: /Audio/_Starlight/Weapons/Guns/Cock/cycle_bolt.ogg
   - type: ContainerContainer
     containers:
       ballistic-ammo: !type:Container
@@ -486,3 +471,17 @@
   - type: Appearance
   - type: StaticPrice
     price: 1
+
+- type: entity
+  parent: BaseWeaponShotgunAny
+  id: BaseWeaponShotgun
+  abstract: true
+  components:
+  - type: BallisticAmmoProvider
+    whitelist:
+      tags:
+      - ShellShotgun
+    capacity: 7
+    proto: ShellShotgun
+    soundInsert:
+      path: /Audio/Weapons/Guns/MagIn/shotgun_insert.ogg

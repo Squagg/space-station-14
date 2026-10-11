@@ -1,4 +1,5 @@
 using Content.Server.Bible.Components;
+using Content.Shared._Starlight.Actions.EntitySystems;
 using Content.Shared._Starlight.Antags.Vampires;
 using Content.Shared._Starlight.Antags.Vampires.Components;
 using Content.Shared._Starlight.Antags.Vampires.Prototypes;
@@ -26,7 +27,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -39,27 +39,27 @@ using Content.Shared.Chemistry.Components;
 using Content.Shared.CombatMode.Pacification;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mindshield.Components;
-using Content.Shared.Starlight.Overlay;
 using Content.Shared.Atmos.Rotting;
 using Content.Shared.Stealth;
 using Content.Shared.Stealth.Components;
-
+using Content.Shared._Starlight.Overlay.Systems;
 
 namespace Content.Server._Starlight.Antags.Vampires.Systems;
 
 public sealed partial class VampireSystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly InventorySystem _inventory = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solution = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly BlindableSystem _blindable = default!;
-    [Dependency] private readonly SharedStealthSystem _stealth = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private BlindableSystem _blindable = default!;
+    [Dependency] private SharedStealthSystem _stealth = default!;
+    [Dependency] private SharedLatchSystem _latch = default!;
     private static readonly SoundSpecifier _biteSound = new SoundPathSpecifier("/Audio/Effects/bite.ogg");
     private static readonly SoundSpecifier _devourSound = new SoundPathSpecifier("/Audio/Effects/demon_consume.ogg");
     private readonly Dictionary<EntityUid, List<EntityUid>> _playerShadowSnares = new();
-    [Dependency] private readonly FlashImmunitySystem _flashImmunity = default!;
+    [Dependency] private FlashImmunitySystem _flashImmunity = default!;
 
     private void InitializeAbilities()
     {
@@ -949,6 +949,10 @@ public sealed partial class VampireSystem : EntitySystem
         args.Handled = true;
     }
 
+    /// <summary>
+    /// Shared Rejuvenate cleanup: optionally restores stamina, and optionally
+    /// clears stuns, knockdown, and any latch holding the vampire.
+    /// </summary>
     private void ResetRejuvenateEffects(EntityUid uid, bool resetStamina, bool removeStuns)
     {
         if (resetStamina && TryComp<StaminaComponent>(uid, out var stamina))
@@ -968,6 +972,9 @@ public sealed partial class VampireSystem : EntitySystem
         _statusEffects.TryRemoveStatusEffect(uid, SharedStunSystem.StunId);
         _stun.TryUnstun(uid);
         RemComp<KnockedDownComponent>(uid);
+
+        // A latch pins like a stun, so shaking off stuns shakes off the latcher too.
+        _latch.TryBreakLatch(uid);
     }
 
     private void PurgeRejuvenateReagents(EntityUid uid, VampireRejuvenateIIActionEvent args)
@@ -989,7 +996,7 @@ public sealed partial class VampireSystem : EntitySystem
 
             if (!_proto.TryIndex<ReagentPrototype>(quant.Reagent.Prototype, out var proto)
                 || proto.Metabolisms == null
-                || !proto.Metabolisms.Keys.Any(k => args.PurgedMetabolismGroups.Contains(k.Id)))
+                || !proto.Metabolisms.Metabolisms.Keys.Any(args.PurgedMetabolismStages.Contains))
                 continue;
 
             var remaining = args.ReagentPurgeAmount - toRemove;

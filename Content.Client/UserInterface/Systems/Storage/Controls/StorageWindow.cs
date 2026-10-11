@@ -21,9 +21,9 @@ using Robust.Shared.Utility;
 
 namespace Content.Client.UserInterface.Systems.Storage.Controls;
 
-public sealed class StorageWindow : BaseWindow
+public sealed partial class StorageWindow : BaseWindow
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
+    [Dependency] private IEntityManager _entity = default!;
     private readonly StorageUIController _storageController;
 
     public EntityUid? StorageEntity;
@@ -645,7 +645,7 @@ public sealed class StorageWindow : BaseWindow
 
     protected override DragMode GetDragModeFor(Vector2 relativeMousePos)
     {
-        if (_storageController.StaticStorageUIEnabled)
+        if (_storageController.UsesDockedWindows()) // Starlight
             return DragMode.None;
 
         if (_sidebar.SizeBox.Contains(relativeMousePos - _sidebar.Position))

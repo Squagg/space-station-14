@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Numerics;
 using Content.Client.Examine;
 using Content.Client.Hands.Systems;
 using Content.Client.Interaction;
@@ -25,7 +24,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.UserInterface.Systems.Storage;
 
-public sealed class StorageUIController : UIController, IOnSystemChanged<StorageSystem>
+public sealed partial class StorageUIController : UIController, IOnSystemChanged<StorageSystem>
 {
     /*
      * Things are a bit over the shop but essentially
@@ -36,10 +35,10 @@ public sealed class StorageUIController : UIController, IOnSystemChanged<Storage
      * - StorageSystem handles any sim stuff around open windows.
      */
 
-    [Dependency] private readonly IConfigurationManager _configuration = default!;
-    [Dependency] private readonly IInputManager _input = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly CloseRecentWindowUIController _closeRecentWindowUIController = default!;
+    [Dependency] private IConfigurationManager _configuration = default!;
+    [Dependency] private IInputManager _input = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private CloseRecentWindowUIController _closeRecentWindowUIController = default!;
     [UISystemDependency] private readonly StorageSystem _storage = default!;
     [UISystemDependency] private readonly UserInterfaceSystem _ui = default!;
 
@@ -105,7 +104,7 @@ public sealed class StorageUIController : UIController, IOnSystemChanged<Storage
             OnPieceUnpressed(args, window, piece);
         };
 
-        if (StaticStorageUIEnabled)
+        if (UsesDockedWindows()) // Starlight
         {
             var hotbar = UIManager.GetActiveUIWidgetOrNull<HotbarGui>();
             // this lambda handles the nested storage case
@@ -273,6 +272,9 @@ public sealed class StorageUIController : UIController, IOnSystemChanged<Storage
         }
         else if (args.Function == ContentKeyFunctions.ActivateItemInWorld)
         {
+            if (TryReplayActivateItem(args, control.Entity)) // Starlight
+                return; // Starlight
+
             EntityManager.RaisePredictiveEvent(
                 new InteractInventorySlotEvent(EntityManager.GetNetEntity(control.Entity), altInteract: false));
             args.Handle();
